@@ -19,45 +19,50 @@ using namespace juce;
 class Database
 {
 public:
-    Database() { loadFiles(); }
+    Database() 
+    { 
+        initFiles(); 
+    }
     ~Database() {}
 
-    void loadFiles()
+    void initFiles()
     {
-        auto artistFolders = juce::File::getCurrentWorkingDirectory().findChildFiles(juce::File::findDirectories, true);
+        auto artistFolders = juce::File("C:/ProgramData/Recluse-Audio/Rompler/").findChildFiles(1, true);
 
         for (int i = 0; i < artistFolders.size(); i++)
         {
-            Artist artist(artistFolders[i].getFileName());
+            auto artist = new Artist(artistFolders[i].getFileName());
 
             auto romples = artistFolders[i].findChildFiles(juce::File::findFiles, true);
 
             for (int j = 0; j < romples.size(); j++)
             {
                 filePaths.add(romples[j].getFullPathName());
-                artist.addRomple(romples[j].getFileName().dropLastCharacters(4));
+                artist->addRomple(romples[j].getFileNameWithoutExtension());
+                fileNames.add(romples[j].getFileNameWithoutExtension());
             }
 
-            artists.add(&artist);
+            artists.add(artist);
 
         }
     }
 
-    juce::String& getFilePathFromIndex(int index) { return filePaths.getReference(index); }
+    juce::String& getFilePathFromIndex(int index) 
+    { 
+        return filePaths.getReference(index); 
+    }
 
-    juce::OwnedArray<Artist>& getArtistArray() { return artists; }
+    juce::String& getFileNameFromIndex(int index)
+    {
+        return fileNames.getReference(index);
+    }
 
 
+    
 private:
     juce::OwnedArray<Artist> artists;
     juce::StringArray filePaths;
-    //juce::StringArray filePaths = {
-    //    /* Devens */
-    //    "../Resources/Descent.wav",
-    //    "../Resources/Steady.wav",
-    //    "../Resources/Rising.wav",
-    //    /* Ashby */
-    //    "../Resources/Stab Brass Blast.wav"
-    //};
+    juce::StringArray fileNames;
 
+    friend class RompMenu;
 };

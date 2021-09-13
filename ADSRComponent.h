@@ -2,41 +2,40 @@
   ==============================================================================
 
     ADSRComponent.h
-    Created: 12 Jul 2021 7:57:36am
-    Author:  ryand
+    Created: 4 Apr 2020 7:35:53pm
+    Author:  Joshua Hodge
 
   ==============================================================================
 */
 
 #pragma once
+
+#include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "PulsarUIFeel.h"
 
 
 //==============================================================================
 /*
 */
-class ADSRComponent  : public juce::Component
+class ADSRComponent    : public Component
 {
 public:
-    ADSRComponent(SamplerAudioProcessor& p);
-    ~ADSRComponent() override;
+    ADSRComponent (RomplerAudioProcessor& p);
+    ~ADSRComponent();
 
-    void paint (juce::Graphics&) override;
+    void paint (Graphics&) override;
     void resized() override;
 
 private:
-    PulsarUIFeel pulsarFeel;
-
-    juce::Slider mAttackSlider, mDecaySlider, mSustainSlider, mReleaseSlider;
-    juce::Label mAttackLabel, mDecayLabel, mSustainLabel, mReleaseLabel;
-
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mAttackAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mDecayAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mSustainAttachment;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> mReleaseAttachment;
-
-    SamplerAudioProcessor& processor;
-
+    Slider mAttackSlider, mDecaySlider, mSustainSlider, mReleaseSlider;
+    Label mAttackLabel, mDecayLabel, mSustainLabel, mReleaseLabel;
+    
+    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> mAttackAttachment;
+    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> mDecayAttachment;
+    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> mSustainAttachment;
+    std::unique_ptr<AudioProcessorValueTreeState::SliderAttachment> mReleaseAttachment;
+    
+    RomplerAudioProcessor& processor;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ADSRComponent)
 };

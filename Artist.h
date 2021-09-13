@@ -25,7 +25,7 @@ public:
 
     juce::String& getArtistName() { return artistName; }
 
-    juce::String& getRompleName(int index) { return rompleNames.getReference(index); }
+    juce::String getRompleName(int index) { return rompleNames[index]; }
 
     int numberOfRomples() { return rompleNames.size(); }
 

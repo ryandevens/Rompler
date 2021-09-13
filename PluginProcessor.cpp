@@ -1,7 +1,9 @@
 /*
   ==============================================================================
 
-    This file contains the basic framework code for a JUCE plugin processor.
+    This file was auto-generated!
+
+    It contains the basic framework code for a JUCE plugin processor.
 
   ==============================================================================
 */
@@ -10,40 +12,39 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-SamplerAudioProcessor::SamplerAudioProcessor()
+RomplerAudioProcessor::RomplerAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
                       #if ! JucePlugin_IsSynth
-                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
+                       .withInput  ("Input",  AudioChannelSet::stereo(), true)
                       #endif
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
+                       .withOutput ("Output", AudioChannelSet::stereo(), true)
                      #endif
-                       ), mAPVTS(*this, nullptr, "Parameters", createParameters())
+                       ), mAPVTS (*this, nullptr, "Parameters", createParameters())
 #endif
 {
     mFormatManager.registerBasicFormats();
-    mAPVTS.state.addListener(this);
-
+    mAPVTS.state.addListener (this);
+    
     for (int i = 0; i < mNumVoices; i++)
     {
-        mSampler.addVoice(new SamplingVoice());
+        mSampler.addVoice (new SamplerVoice());
     }
-    //loadFromDisk(0);
 }
 
-SamplerAudioProcessor::~SamplerAudioProcessor()
+RomplerAudioProcessor::~RomplerAudioProcessor()
 {
-    mAPVTS.state.removeListener(this);
+    mAPVTS.state.removeListener (this);
 }
 
 //==============================================================================
-const juce::String SamplerAudioProcessor::getName() const
+const String RomplerAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool SamplerAudioProcessor::acceptsMidi() const
+bool RomplerAudioProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
     return true;
@@ -52,7 +53,7 @@ bool SamplerAudioProcessor::acceptsMidi() const
    #endif
 }
 
-bool SamplerAudioProcessor::producesMidi() const
+bool RomplerAudioProcessor::producesMidi() const
 {
    #if JucePlugin_ProducesMidiOutput
     return true;
@@ -61,7 +62,7 @@ bool SamplerAudioProcessor::producesMidi() const
    #endif
 }
 
-bool SamplerAudioProcessor::isMidiEffect() const
+bool RomplerAudioProcessor::isMidiEffect() const
 {
    #if JucePlugin_IsMidiEffect
     return true;
@@ -70,61 +71,59 @@ bool SamplerAudioProcessor::isMidiEffect() const
    #endif
 }
 
-double SamplerAudioProcessor::getTailLengthSeconds() const
+double RomplerAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int SamplerAudioProcessor::getNumPrograms()
+int RomplerAudioProcessor::getNumPrograms()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
                 // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int SamplerAudioProcessor::getCurrentProgram()
+int RomplerAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void SamplerAudioProcessor::setCurrentProgram (int index)
+void RomplerAudioProcessor::setCurrentProgram (int index)
 {
 }
 
-const juce::String SamplerAudioProcessor::getProgramName (int index)
+const String RomplerAudioProcessor::getProgramName (int index)
 {
     return {};
 }
 
-void SamplerAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void RomplerAudioProcessor::changeProgramName (int index, const String& newName)
 {
 }
 
 //==============================================================================
-void SamplerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void RomplerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    mSampler.setCurrentPlaybackSampleRate(sampleRate);
+    mSampler.setCurrentPlaybackSampleRate (sampleRate);
     updateADSR();
 }
 
-void SamplerAudioProcessor::releaseResources()
+void RomplerAudioProcessor::releaseResources()
 {
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool SamplerAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool RomplerAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
-    juce::ignoreUnused (layouts);
+    ignoreUnused (layouts);
     return true;
   #else
     // This is the place where you check if the layout is supported.
     // In this template code we only support mono or stereo.
-    // Some plugin hosts, such as certain GarageBand versions, will only
-    // load plugins that support stereo bus layouts.
-    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+    if (layouts.getMainOutputChannelSet() != AudioChannelSet::mono()
+     && layouts.getMainOutputChannelSet() != AudioChannelSet::stereo())
         return false;
 
     // This checks if the input layout matches the output layout
@@ -138,250 +137,135 @@ bool SamplerAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) 
 }
 #endif
 
-void SamplerAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void RomplerAudioProcessor::processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
-    juce::ScopedNoDenormals noDenormals;
+    ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
-
-    if (mShouldUpdate.get())
+    
+    if (mShouldUpdate)
     {
         updateADSR();
-        updateLoop();
-        mShouldUpdate = false;
     }
-
-    juce::MidiMessage m;
-    juce::MidiBuffer::Iterator it{ midiMessages };
+    
+    MidiMessage m;
+    MidiBuffer::Iterator it { midiMessages };
     int sample;
-
-    while (it.getNextEvent(m, sample))
+    
+    while (it.getNextEvent (m, sample))
     {
         if (m.isNoteOn())
             mIsNotePlayed = true;
         else if (m.isNoteOff())
             mIsNotePlayed = false;
     }
+    
+    mSampleCount = mIsNotePlayed ? mSampleCount += buffer.getNumSamples() : 0;
 
-    sampleLoop(buffer);
-    // sampleCount iterates by blocks.  Starts with a note on message and ends with note off
-
-    mSampler.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
-}
-
-void SamplerAudioProcessor::sampleLoop(juce::AudioBuffer<float>& buffer)
-{
-    for (int sampleIndex = 0; sampleIndex < buffer.getNumSamples(); sampleIndex++)
-    {
-        if (mIsNotePlayed.get())
-        {
-            if (transportSampleIndex > mSampleEnd.get())
-            {
-                transportSampleIndex = mSampleStart.get();
-            }
-            transportSampleIndex++;
-        }
-        else
-        {
-            transportSampleIndex = mSampleStart.get();
-        }   
-    }
-}
-
-void SamplerAudioProcessor::channelLoop(juce::AudioBuffer<float>& buffer, int sampleIndex)
-{
-    for (int channel = 0; channel < buffer.getNumChannels(); channel++)
-    {
-
-    }
+    mSampler.renderNextBlock (buffer, midiMessages, 0, buffer.getNumSamples());
 }
 
 //==============================================================================
-bool SamplerAudioProcessor::hasEditor() const
+bool RomplerAudioProcessor::hasEditor() const
 {
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor* SamplerAudioProcessor::createEditor()
+AudioProcessorEditor* RomplerAudioProcessor::createEditor()
 {
-    return new SamplerAudioProcessorEditor (*this);
+    return new RomplerAudioProcessorEditor (*this);
 }
 
 //==============================================================================
-void SamplerAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void RomplerAudioProcessor::getStateInformation (MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
 }
 
-void SamplerAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void RomplerAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
 }
 
-void SamplerAudioProcessor::loadFile()
+
+void RomplerAudioProcessor::loadFile (const String& path)
 {
     mSampler.clearSounds();
-
-    juce::FileChooser chooser{ "Please load a file" };
-
-    if (chooser.browseForFileToOpen())
-    {
-        auto file = chooser.getResult();
-        // the reader can be a local variable here since it's not needed by the SamplerSound after this
-        std::unique_ptr<juce::AudioFormatReader> reader{ mFormatManager.createReaderFor(file) };
-        if (reader)
-        {
-            juce::BigInteger range;
-            range.setRange(0, 128, true);
-            mSampler.addSound(new SampleSound("Sample", *reader, range, 60, 0.1, 0.1, 10.0));
-            resetLoop(reader->lengthInSamples);
-
-        }
-
-    }
-}
-
-void SamplerAudioProcessor::loadFile(const juce::String& path)
-{
-    mSampler.clearSounds();
-
-    auto file= juce::File(path);
+    
+    auto file = File (path);
     // the reader can be a local variable here since it's not needed by the other classes after this
-    std::unique_ptr<juce::AudioFormatReader> reader{ mFormatManager.createReaderFor(file) };
+    std::unique_ptr<AudioFormatReader> reader{ mFormatManager.createReaderFor(file) };
+    auto offIndex = reader->searchForLevel(getSampleRate() / 2, reader->lengthInSamples - getSampleRate() / 2,
+        0.0, 0.005, 1024);
+    double onSecond = offIndex / getSampleRate(); // trying to append empty part of samples
     if (reader)
     {
-        juce::BigInteger range;
+        BigInteger range;
         range.setRange(0, 128, true);
-        mSampler.addSound(new SampleSound("Sample", *reader, range, 60, 0.1, 0.1, 10.0));
+        mSampler.addSound(new SamplerSound("Sample", *reader, range, 60, 0.1, 0.1, onSecond));
         updateADSR();
-        resetLoop(reader->lengthInSamples);
-
     }
-
+    
 }
 
-juce::AudioBuffer<float>& SamplerAudioProcessor::getWaveForm()
+AudioBuffer<float>& RomplerAudioProcessor::getWaveForm()
 {
     // get the last added synth sound as a SamplerSound*
-    auto sound = dynamic_cast<SampleSound*>(mSampler.getSound(mSampler.getNumSounds() - 1).get());
+    auto sound = dynamic_cast<SamplerSound*>(mSampler.getSound(mSampler.getNumSounds() - 1).get());
     if (sound)
     {
         return *sound->getAudioData();
     }
     // just in case it somehow happens that the sound doesn't exist or isn't a SamplerSound,
     // return a static instance of an empty AudioBuffer here...
-    static juce::AudioBuffer<float> dummybuffer;
-
+    static AudioBuffer<float> dummybuffer;
     return dummybuffer;
 }
 
-void SamplerAudioProcessor::updateADSR()
+void RomplerAudioProcessor::updateADSR()
 {
-    mADSRParams.attack = mAPVTS.getRawParameterValue("ATTACK")->load();
-    mADSRParams.decay = mAPVTS.getRawParameterValue("DECAY")->load();
-    mADSRParams.sustain = mAPVTS.getRawParameterValue("SUSTAIN")->load();
-    mADSRParams.release = mAPVTS.getRawParameterValue("RELEASE")->load();
-
+    mShouldUpdate = false;
+    
+    mADSRParams.attack = mAPVTS.getRawParameterValue ("ATTACK")->load();
+    mADSRParams.decay = mAPVTS.getRawParameterValue ("DECAY")->load();
+    mADSRParams.sustain = mAPVTS.getRawParameterValue ("SUSTAIN")->load();
+    mADSRParams.release = mAPVTS.getRawParameterValue ("RELEASE")->load();
+    
     for (int i = 0; i < mSampler.getNumSounds(); ++i)
     {
-        if (auto sound = dynamic_cast<SampleSound*>(mSampler.getSound(i).get()))
+        if (auto sound = dynamic_cast<SamplerSound*>(mSampler.getSound(i).get()))
         {
-            sound->setEnvelopeParameters(mADSRParams);
+            sound->setEnvelopeParameters (mADSRParams);
         }
     }
 }
 
-void SamplerAudioProcessor::updateLoop()
+AudioProcessorValueTreeState::ParameterLayout RomplerAudioProcessor::createParameters()
 {
-    auto start = mAPVTS.getRawParameterValue("Loop Start")->load() * ;
-
-    mSampleStart = mAPVTS.getRawParameterValue("Loop Start")->load();
-    mSampleEnd = mAPVTS.getRawParameterValue("Loop End")->load();
-
-}
-
-void SamplerAudioProcessor::resetLoop(int numSamples)
-{
-    mSampleStart = 0;
-    mSampleEnd = numSamples;
-}
-
-void SamplerAudioProcessor::loadFromDisk(juce::String& filePath)
-{
-    auto parent = juce::File::File();
-    parent = juce::File::getCurrentWorkingDirectory();
-    auto file = parent.getChildFile(filePath);
-    mSampler.clearSounds();
-
-    std::unique_ptr<juce::AudioFormatReader> reader{ mFormatManager.createReaderFor(file) };
-    if (reader)
-    {
-        juce::BigInteger range;
-        range.setRange(0, 128, true);
-        mSampler.addSound(new SampleSound("Sample", *reader, range, 60, 0.1, 0.1, 10.0));
-        updateADSR();
-        resetLoop(reader->lengthInSamples);
-    }
-
-}
-
-void SamplerAudioProcessor::loadFromIndex(int index)
-{
-    auto parent = juce::File::File();
-    parent = juce::File::getCurrentWorkingDirectory();
-    auto file = parent.getChildFile(filePaths[index]);
-    mSampler.clearSounds();
-
-    std::unique_ptr<juce::AudioFormatReader> reader{ mFormatManager.createReaderFor(file) };
-    if (reader)
-    {
-        juce::BigInteger range;
-        range.setRange(0, 128, true);
-        mSampler.addSound(new SampleSound("Sample", *reader, range, 60, 0.1, 0.1, 10.0));
-        updateADSR();
-        resetLoop(reader->lengthInSamples);
-    }
-
-}
-
-
-juce::AudioProcessorValueTreeState::ParameterLayout SamplerAudioProcessor::createParameters()
-{
-    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
-
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("ATTACK", "Attack", 0.0f, 5.0f, 0.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("DECAY", "Decay", 0.0f, 5.0f, 2.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("SUSTAIN", "Sustain", 0.0f, 1.0f, 1.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("RELEASE", "Release", 0.0f, 5.0f, 0.0f));
-
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("Loop Start", "Loop Start", 0.0f, 99.0f, 50.0f));
-    params.push_back(std::make_unique<juce::AudioParameterFloat>("Loop End", "Loop End", 1.0f, 100.0f, 60.0f));
-
+    std::vector<std::unique_ptr<RangedAudioParameter>> params;
+    
+    params.push_back (std::make_unique<AudioParameterFloat>("ATTACK", "Attack", 0.0f, 5.0f, 0.0f));
+    params.push_back (std::make_unique<AudioParameterFloat>("DECAY", "Decay", 0.0f, 5.0f, 2.0f));
+    params.push_back (std::make_unique<AudioParameterFloat>("SUSTAIN", "Sustain", 0.0f, 1.0f, 1.0f));
+    params.push_back (std::make_unique<AudioParameterFloat>("RELEASE", "Release", 0.0f, 5.0f, 0.0f));
+    
     return { params.begin(), params.end() };
 }
 
-void SamplerAudioProcessor::valueTreePropertyChanged(juce::ValueTree& treeWhosePropertyHasChanged, const juce::Identifier& property)
+void RomplerAudioProcessor::valueTreePropertyChanged (ValueTree &treeWhosePropertyHasChanged, const Identifier &property)
 {
     mShouldUpdate = true;
 }
 
-
-
 //==============================================================================
 // This creates new instances of the plugin..
-juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new SamplerAudioProcessor();
+    return new RomplerAudioProcessor();
 }

@@ -23,10 +23,13 @@ public:
                            float maxSliderPos,
                            const juce::Slider::SliderStyle,
         juce::Slider&) override;
-    
+
+    void drawRotarySlider(Graphics&, int x, int y, int width, int height,
+        float sliderPosProportional, float rotaryStartAngle,
+        float rotaryEndAngle, Slider&) override;
+
     juce::Slider::SliderLayout getSliderLayout(juce::Slider&) override;
     juce::Label* createSliderTextBox(juce::Slider&) override;
-    juce::Font getLabelFont(juce::Label&) override;
     
     void drawButtonBackground(juce::Graphics& g, juce::Button& button, const juce::Colour& backgroundColour,
                               bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown) override;
@@ -34,6 +37,8 @@ public:
     void drawPopupMenuBackground(juce::Graphics& g, int width, int height) override;
 
     juce::Font getPopupMenuFont() override;
+    juce::Font getLabelFont(juce::Label&) override;
+    Font getTextButtonFont(TextButton&, int buttonHeight) override {    return getFont().withHeight(buttonHeight*0.7f);   }
 
 private:
     juce::Font getFont()

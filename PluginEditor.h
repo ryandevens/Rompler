@@ -1,7 +1,9 @@
 /*
   ==============================================================================
 
-    This file contains the basic framework code for a JUCE plugin editor.
+    This file was auto-generated!
+
+    It contains the basic framework code for a JUCE plugin editor.
 
   ==============================================================================
 */
@@ -10,31 +12,35 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "SampleThumbnail.h"
+#include "WaveThumbnail.h"
 #include "ADSRComponent.h"
 #include "RompMenu.h"
+#include "PulsarUIFeel.h"
+
+
 //==============================================================================
 /**
 */
-class SamplerAudioProcessorEditor  : public juce::AudioProcessorEditor, public juce::Timer
-
+class RomplerAudioProcessorEditor  : public AudioProcessorEditor,
+                                          public Timer
 {
 public:
-    SamplerAudioProcessorEditor (SamplerAudioProcessor&);
-    ~SamplerAudioProcessorEditor() override;
+    RomplerAudioProcessorEditor (RomplerAudioProcessor&);
+    ~RomplerAudioProcessorEditor();
 
     //==============================================================================
-    void paint (juce::Graphics&) override;
+    void paint (Graphics&) override;
     void resized() override;
-
+    
     void timerCallback() override;
 
+private:    
+    PulsarUIFeel pulsarFeel;
+    std::unique_ptr<WaveThumbnail> mWaveThumbnail;
+    std::unique_ptr<ADSRComponent> mADSR;
+    std::unique_ptr<RompMenu> rompMenu;
 
-private:
-    SampleThumbnail sampleThumbnail;
-    ADSRComponent mADSR;
-    RompMenu    menu;
-    SamplerAudioProcessor& audioProcessor;
+    RomplerAudioProcessor& processor;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SamplerAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RomplerAudioProcessorEditor)
 };

@@ -1,7 +1,9 @@
 /*
   ==============================================================================
 
-    This file contains the basic framework code for a JUCE plugin editor.
+    This file was auto-generated!
+
+    It contains the basic framework code for a JUCE plugin editor.
 
   ==============================================================================
 */
@@ -10,47 +12,46 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-SamplerAudioProcessorEditor::SamplerAudioProcessorEditor (SamplerAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p), sampleThumbnail(p), mADSR(p), menu(p)
+RomplerAudioProcessorEditor::RomplerAudioProcessorEditor (RomplerAudioProcessor& p)
+    : AudioProcessorEditor (&p), processor (p)
 {
-    setSize(600, 400);
+    setLookAndFeel(&pulsarFeel);
+    mWaveThumbnail = std::make_unique<WaveThumbnail>(p);
+    addAndMakeVisible (mWaveThumbnail.get());
 
-    addAndMakeVisible(sampleThumbnail);
+    mADSR = std::make_unique<ADSRComponent>(p);
+    addAndMakeVisible (mADSR.get());
 
-    addAndMakeVisible(mADSR);
+    rompMenu = std::make_unique<RompMenu>(p);
+    addAndMakeVisible(rompMenu.get());
 
-    menu.setTopLeftPosition(260, 30);
-    addAndMakeVisible(menu);
-
-    startTimerHz(30);
-
-    sampleThumbnail.setBoundsRelative(0.1f, 0.2f, 0.8f, 0.5);
-    mADSR.setBoundsRelative(0.65f, 0.75f, 0.3f, 0.25f);
-
+    startTimerHz (30);
+    
+    setSize (600, 400);
 }
 
-SamplerAudioProcessorEditor::~SamplerAudioProcessorEditor()
+RomplerAudioProcessorEditor::~RomplerAudioProcessorEditor()
 {
     stopTimer();
-
 }
 
 //==============================================================================
-void SamplerAudioProcessorEditor::paint (juce::Graphics& g)
+void RomplerAudioProcessorEditor::paint (Graphics& g)
 {
-    g.fillAll(juce::Colours::black);
+    auto color = Colour{ 0.001f, 0.f, 0.0005f, 1.f };
+    g.fillAll(color);
 }
 
-void SamplerAudioProcessorEditor::timerCallback()
+void RomplerAudioProcessorEditor::resized()
+{
+    mWaveThumbnail->setBoundsRelative (0.0f, 0.2f, 1.0f, 0.6);
+    mADSR->setBoundsRelative (0.0f, 0.8f, 1.0f, 0.2f);
+    rompMenu->setBoundsRelative(0.f, 0.05f, 1.0f, 0.2f);
+}
+
+void RomplerAudioProcessorEditor::timerCallback()
 {
     repaint();
-}
-
-
-void SamplerAudioProcessorEditor::resized()
-{
-    sampleThumbnail.setBoundsRelative(0.1f, 0.2f, 0.8f, 0.5);
-    mADSR.setBoundsRelative(0.65f, 0.75f, 0.3f, 0.25f);
 }
 
 

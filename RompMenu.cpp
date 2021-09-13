@@ -12,21 +12,14 @@
 #include "RompMenu.h"
 
 //==============================================================================
-RompMenu::RompMenu(SamplerAudioProcessor& p) : audioProcessor(p)
+RompMenu::RompMenu(RomplerAudioProcessor& p) : audioProcessor(p), database()
 {
-    setSize(200, 30);
-    setLookAndFeel(&pulsarUIFeel);
+    setLookAndFeel(&pulsarFeel);
 
-    text.setText("Romples");
-    text.setColour(juce::Colours::white);
-    text.setJustification(juce::Justification::centred);
-    text.setFont(juce::Font("Consolas", "Bold", 18.f), false);
-    addAndMakeVisible(text);
-
-    prepareArtists();
+    menuButton = std::make_unique<TextButton>("Romples");
+    menuButton->addListener(this);
+    addAndMakeVisible(menuButton.get());
     prepareMenu();
-
-
 }
 
 RompMenu::~RompMenu()
@@ -39,41 +32,69 @@ void RompMenu::paint (juce::Graphics& g)
 
     g.setColour(juce::Colours::black);
     g.fillAll();
+
+    g.setColour(Colours::white);
+    g.setFont(15.0f);
+    auto textBounds = getLocalBounds().reduced(10, 10);
+    g.drawFittedText(fileName, textBounds, Justification::topLeft, 1);
+
+
 }
 
 void RompMenu::resized()
 {
-
+    menuButton->setBoundsRelative(0.85f, 0.05f, 0.1f, 0.25f);
 }
 
 
 void RompMenu::mouseDown(const juce::MouseEvent& e)
 {
-    int selection = menu.showAt(this) - 1; // item id's start at 1, but passing to a vector storign file paths at [0]
+    //int selection = menu.showAt(this) - 1; // item id's start at 1, but passing to a vector storign file paths at [0]
+    //auto filePath = database.getFilePathFromIndex(selection);
+    //audioProcessor.loadFile(filePath);
+}
 
-    audioProcessor.loadFromIndex(selection);
+void RompMenu::buttonClicked(Button* b)
+{
+    if (b == menuButton.get())
+    {
+        auto parentScreen = getParentMonitorArea();
+        auto menuArea = Rectangle<int>(getParentWidth() * 0.5f, parentScreen.getY(), getParentWidth() / 2, getParentHeight());
+        int selection = menu.showMenu(PopupMenu::Options().withTargetScreenArea(menuArea));
+        if (selection == 0)
+        {
+            menu.dismissAllActiveMenus();
+        }
+        if (selection > 0)
+        {
+            auto path = database.getFilePathFromIndex(selection - 1); // item id's start at 1, but passing to a vector storign file paths at [0]
+            audioProcessor.loadFile(path);
+            fileName = database.getFileNameFromIndex(selection - 1);
+        }
+    }
+    repaint();
 }
 
 void RompMenu::prepareMenu()
 {
-    auto artists = audioProcessor.getArtistArray();
-    menu.setLookAndFeel(&pulsarUIFeel);
+    menu.setLookAndFeel(&pulsarFeel);
 
-    juce::ScopedPointer<juce::PopupMenu> artistsMenu = new juce::PopupMenu;
+    auto menuArea = Rectangle<float>(getParentWidth() / 2, 0, getParentWidth() / 2, getParentHeight());
+    juce::ScopedPointer<juce::PopupMenu> artistsMenu = new juce::PopupMenu();
 
     int itemIndex = 1; // used to properly index artist romples without resetting in the artist loop
 
-    for (size_t i = 0; i < artists.size(); i++)
+    for (size_t i = 0; i < database.artists.size(); i++)
     {
         juce::ScopedPointer<juce::PopupMenu> romplerMenu = new juce::PopupMenu;
 
-        for (size_t j = 0; j < artists[i]->numberOfRomples(); j++)
+        for (size_t j = 0; j < database.artists[i]->numberOfRomples(); j++)
         {
-            romplerMenu->addItem(itemIndex, artists[i]->getRompleName(j));
+            romplerMenu->addItem(itemIndex, database.artists[i]->getRompleName(j));
             itemIndex++;
         }
 
-        auto artist = artists[i];
+        auto artist = database.artists[i];
         artistsMenu->addSubMenu(artist->getArtistName(), *romplerMenu);
     }
 

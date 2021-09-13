@@ -13,31 +13,38 @@
 #include <JuceHeader.h>
 #include "PulsarUIFeel.h"
 #include "PluginProcessor.h"
-#include "Artist.h"
 #include "Database.h"
+#include "Artist.h"
 
 
 //==============================================================================
 /*
 */
-class RompMenu  : public juce::Component, juce::MouseListener
+class RompMenu  : public juce::Component, juce::MouseListener, juce::Button::Listener
 {
 public:
-    RompMenu(SamplerAudioProcessor& p);
+    RompMenu(RomplerAudioProcessor& p);
     ~RompMenu() override;
 
     void paint (juce::Graphics&) override;
     void resized() override;
 
     void mouseDown(const juce::MouseEvent& e);
+    void buttonClicked(Button* b) override;
     void prepareMenu();
+
+
 
 private:
     Database database;
-    juce::PopupMenu menu;
-    juce::DrawableText text;
-    PulsarUIFeel pulsarUIFeel;
-    SamplerAudioProcessor& audioProcessor;
+    PopupMenu menu;
+    DrawableText text;
+
+    PulsarUIFeel pulsarFeel;
+
+    std::unique_ptr<TextButton> menuButton;
+    String fileName;
+    RomplerAudioProcessor& audioProcessor;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (RompMenu)
 };
